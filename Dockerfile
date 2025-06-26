@@ -1,22 +1,14 @@
-# First stage: Build the Go app
-FROM golang:1.21.6-alpine3.20 AS builder
+# 1. Builder stage
+FROM golang:1.23.5-alpine AS builder
+
 
 WORKDIR /app
+COPY . .
+RUN go build -o  main.go
 
-COPY go.mod ./
-COPY go.sum ./
-RUN apk update && apk upgrade && go mod download
-
-COPY . ./
-RUN go build -o /go/bin/app
-
-# Second stage: Minimal image
-FROM alpine:3.20
-
-RUN apk update && apk upgrade
-
-COPY --from=builder /go/bin/app /app
+# 2. Final image
+FROM alpine:latest
+COPY --from=builder /app/main.go /app
 
 EXPOSE 8080
-
-ENTRYPOINT ["/app"]
+CMD ["/app"]
